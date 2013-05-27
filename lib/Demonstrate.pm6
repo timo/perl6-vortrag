@@ -3,14 +3,13 @@ use Term::ANSIColor;
 START say "";
 END say "";
 
+sub farbe($_) { "\e[38;5;{$_}m" };
 
 sub brackify($_) is export {
     sub twofiddy($_) { "\e[38;5;{$_}m" };
     my %parens = '[]{}<>()'.comb;
     my %rparens = Hash.new(%parens.invert);
     my @allp = %parens.keys, %parens.values;
-    say %parens.perl;
-    say %rparens.perl;
     my $depth = 2;
     my @stack;
     twofiddy(1) ~ (for $_.comb(/@allp||<-[\(\)\<\>\[\]\{\}]>+/) {
@@ -44,8 +43,4 @@ sub psay(**@d) is export {
 }
 sub csay(**@d) is export {
     say(@d>>.gist>>.trim-trailing.join(", "));
-}
-
-sub bracketize(Str $in) {
-
 }
