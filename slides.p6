@@ -13,9 +13,11 @@
 :silent :!gnome-terminal --hide-menubar -t "Perl Output" -x tmux -L REPL &
 :silent :!sleep 0.25; i3 border 1pixel
 :silent :!tmux -L REPL send-keys 'cd ~/work/gpn13/perl6' 'Enter'
+:silent :!tmux -L REPL send-keys 'ulimit -m 819200' 'Enter'
 :silent :!tmux -L REPL send-keys 'export PS1="C:\Perl6\Vortrag\Slides> "' 'Enter'
 :silent :!tmux -L REPL send-keys 'export RPS1=""' 'Enter'
 :silent :!tmux -L REPL send-keys 'clear' 'Enter'
+:silent :!tmux -L REPL send-keys 'yes " " | head -n 1000' 'Enter'
 :silent :!tmux -L REPL set-option -g status off
 :set foldmethod=marker
 :set guifont=Monaco\ 14
@@ -43,26 +45,51 @@ say Timo.WHY;
 # }}}
 # Meta: Regexes {{{
 
+=for Starters
+    In perl6 wurde eine neue Regex syntax eingeführt.
+    Diese ist
+
 =item Lesbarer
 =item Mächtiger
 =item Übersichtlicher
 
-say $=pod.perl;
-pause;
-for $=pod -> $piece {
-    print " - ", $piece.content>>.content;
-    p;
+=for Perl5People
+    Man kann jederzeit mit :P5 oder :Perl5 PCRE
+    stattdessen schreiben.
+
+=for Clarity
+    Warum man das aber eigentlich garnicht mehr will
+    sehen wir später vielleicht noch.
+
+for $=pod {
+    when Pod::Item { print " - " }
+    default { print "\n" }
+    KEEP {
+        print .content>>.content;
+        p;
+    }
 }
 
 # }}}
 # Regexes 1a {{{
-say "Foo Bar" ~~ m:P5/(...)(?:\ (...))+/;
-say "Foo Bar" ~~ /(...)+ % " "/;
+psay "Foo Bar" ~~ m:P5/(...)(?:\ (...))+/;
+psay "Foo Bar" ~~ /(...)+ % " "/;
 # }}}
 # Regexes 1b {{{
-say "p5: ", 'Foo Bar \o/ Qux' ~~ m:P5/(...)(?:\ (...))+/;
-say "p6: ", 'Foo Bar \o/ Qux' ~~ /(...)+ % " "/;
-say "oops";
+say "Auf Ergebnisse zugreifen";
+
+say "Foo Bar" ~~ m:P5/(...)(?:\ (...))+/;
+psay $0, $1;
+
+say "Foo Bar" ~~ /(...)+ % " "/;
+psay $0, $1;
+
+psay $0.WHAT, $0.elems, $0[0].WHAT;
+# }}}
+# Regexes 1c {{{
+psay "p5: ", 'Foo Bar \o/ Qux' ~~ m:P5/(...)(?:\ (...))+/;
+psay "p6: ", 'Foo Bar \o/ Qux' ~~ /(...)+ % " "/;
+psay "oops";
 # }}}
 # Regexes 2a {{{
 my $r = "Foo123" ~~ /<ident>/;
