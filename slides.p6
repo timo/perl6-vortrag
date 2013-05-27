@@ -38,7 +38,7 @@ class Timo {
     has @.h-spaces = "chaosdorf", "entropia";
 }
 my Timo $me = Timo.new;
-say $me.gist;
+say brackify($me.gist);
 pause;
 say Timo.WHY;
 
@@ -97,5 +97,5 @@ $r = "Foo123" ~~ /<alnum> ** 4/;
 $r = "Foo123" ~~ /(<.alpha> ** 2..5)/;
 # }}}
 # Regexes 2b {{{
-
+say brackify("foo(bar, baz, quux(barbaz, abc))");
 # }}}
