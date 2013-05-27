@@ -2,11 +2,39 @@
 :set ft=perl6
 :set ls=0 " no powerline, we don't have enough space.
 :chdir ~/work/gpn13/perl6/
-:map <leader>x [zV]z:w! foobar.p6<CR>:silent :!tmux -L REPL send-keys "perl6 -Ilib -MDemonstrate foobar.p6; i3 focus left >& /dev/null" "Enter"<CR>:silent :!i3 focus right<CR>:redraw!<cr>j
-:map <leader>v [zV]z:w! foobar.p6<CR>:silent :!tmux -L REPL send-keys "perl6-debug -Ilib -MDemonstrate foobar.p6; i3 focus left >& /dev/null" "Enter"<CR>:silent :!i3 focus right<CR>:redraw!<cr>j
-:map <leader>l [zV]z:w! foobar.p6<CR>:silent :!tmux -L REPL send-keys "perl6 -Ilib -MDemonstrate foobar.p6 =inputdialog('flags? ')<CR>; i3 focus left >& /dev/null" "Enter"<CR>:silent :!i3 focus right<CR>:redraw!<cr>j
+:map <leader>x [zV]z:w! foobar.p6<CR>
+            \:silent :!tmux -L REPL send-keys
+                \"perl6 -Ilib -MDemonstrate foobar.p6;
+                \i3 focus left >& /dev/null"
+                \"Enter"<CR>
+            \:silent :!i3 focus right<CR>
+            \:redraw!<cr>
+            \j
+:map <leader>v [zV]z:w!
+            \foobar.p6<CR>:silent
+            \:!tmux -L REPL send-keys
+                \"perl6-debug -Ilib -MDemonstrate foobar.p6;
+                \i3 focus left >& /dev/null"
+                \"Enter"<CR>
+            \:silent
+            \:!i3 focus right<CR>
+            \:redraw!<cr>
+            \j
+:map <leader>l [zV]z:w! foobar.p6<CR>
+            \:silent :!tmux -L REPL send-keys
+                \"perl6 -Ilib -MDemonstrate foobar.p6 =inputdialog('flags? ')<CR>;
+                \i3 focus left >& /dev/null"
+                \"Enter"<CR>
+            \:silent :!i3 focus right<CR>
+            \:redraw!<cr>j
 :map <leader>start :silent :!tmux -L CNTR send-keys 'Enter'<CR><CR>
-:map <leader>clean :silent :!killall perl6; tmux -L CNTR send-keys "C-c"; tmux -L REPL send-keys "C-c"; xkill; tmux -L CNTR send-keys "C-d" "C-d" "C-d"; tmux -L REPL send-keys "C-d" "C-d" "C-d"<CR><CR>
+:map <leader>clean :silent 
+            \:!killall perl6;
+            \tmux -L CNTR send-keys "C-c";
+            \tmux -L REPL send-keys "C-c";
+            \xkill;
+            \tmux -L CNTR send-keys "C-d" "C-d" "C-d";
+            \tmux -L REPL send-keys "C-d" "C-d" "C-d"<CR><CR>
 :map <PageDown> zczjzoj
 :map <PageUp> zczkzkzjzoj
 :silent :!i3 border 1pixel; i3 split v
