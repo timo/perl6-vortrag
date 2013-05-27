@@ -3,22 +3,25 @@ use Term::ANSIColor;
 START say "";
 END say "";
 
-constant @twofiddy is export := ("\e[38;5;{$_}m" for ^256);
 
 sub brackify($_) is export {
+    sub twofiddy($_) { "\e[38;5;{$_}m" };
+    my %parens = '[]{}<>()'.comb;
+    my %rparens = Hash.new(%parens.invert);
+    my @allp = %parens.keys, %parens.values;
+    say %parens.perl;
+    say %rparens.perl;
     my $depth = 2;
     my @stack;
-    @twofiddy[1] ~ (for $_.comb(/<[,(\{\[\<\>\]\}\)]>||<-[\,\(\{\[\<\>\]\}\)]>*/) {
-        when ',' {
-            @twofiddy[$depth] ~ ",";
+    twofiddy(1) ~ (for $_.comb(/@allp||<-[\(\)\<\>\[\]\{\}]>+/) {
+        when %parens {
+            push @stack, %parens{$_};
+            twofiddy(++$depth) ~ $_;
         }
-        when /'('|'{'|'['|'<'/ {
-            @twofiddy[++$depth] ~ $_;
-            push @stack, $_;
-        }
-        when /')'|'}'|']'|'>'/ {
+        when %rparens {
             if $_ eq @stack[*-1] {
-                @twofiddy[$depth--] ~ $_;
+                @stack.pop;
+                twofiddy($depth--) ~ $_ ~ twofiddy($depth);
             } else { $_ }
         }
         default {
