@@ -96,6 +96,7 @@ say Timo.WHY;
 podpresent;
 
 # }}}
+
 # Gulasch-Regex 1 {{{
 say "Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
         <produkt=ident> \: <ws>
@@ -217,7 +218,91 @@ class Produkt {
     has $.kategorie = die "eine kategorie muss angegeben werden";
 }
 
-epsay Produkt.new();
+epsay Produkt.new(name=>"gulasch", preis=>3.50, kategorie=>"gestern");
+# }}}
+# OOP 6 {{{
+class Produkt {
+    has Real $.preis = die "ein preis muss angegeben werden";
+    has Str $.name = die "ein name muss angegeben werden";
+    has Str $.kategorie = die "eine kategorie muss angegeben werden";
+}
+
+epsay Produkt.new(name=>1.50, preis=>3.50, kategorie=>"gestern");
+# }}}
+# Mix-ins 1 {{{
+role Geöffnet { ... }
+class Produkt {
+    has Str $.name = die "ein name muss angegeben werden";
+
+    method öffnen {
+        self does Geöffnet;
+    }
+}
+role Geöffnet {
+    method konsumieren {
+        say "Mh, lecker $.name! nomnomnom";
+    }
+}
+
+my $mate = Produkt.new(name=>"Club-Mate");
+
+try { $mate.konsumieren }; epsay $!;
+
+epsay $mate ~~ Geöffnet, $mate.WHAT;
+$mate.öffnen;
+epsay $mate ~~ Geöffnet, $mate.WHAT;
+
+$mate.konsumieren;
+# }}}
+# Mix-ins 2 {{{
+role Geöffnet { ... }
+class Produkt {
+    has Str $.name = die "ein name muss angegeben werden";
+
+    method öffnen {
+        return self but Geöffnet;
+    }
+}
+role Geöffnet {
+    method konsumieren {
+        say "Mh, lecker $.name! nomnomnom";
+    }
+}
+
+my $mate = Produkt.new(name=>"Club-Mate");
+
+try { $mate.konsumieren }; epsay $!;
+
+epsay $mate ~~ Geöffnet, $mate.WHAT; # vor dem öffnen
+$mate.öffnen;
+epsay $mate ~~ Geöffnet, $mate.WHAT; # nach dem öffnen
+
+$mate.konsumieren;
+# }}}
+# Mix-ins 3 {{{
+role Geöffnet { ... }
+class Produkt {
+    has Str $.name = die "ein name muss angegeben werden";
+
+    method öffnen {
+        return self but Geöffnet;
+    }
+}
+role Geöffnet {
+    method konsumieren {
+        say "Mh, lecker $.name! nomnomnom";
+    }
+}
+
+my $mate = Produkt.new(name=>"Club-Mate");
+
+try { $mate.konsumieren }; epsay $!;
+
+epsay $mate ~~ Geöffnet, $mate.WHAT;
+$mate .= öffnen;
+epsay $mate ~~ Geöffnet, $mate.WHAT;
+
+$mate.konsumieren;
 # }}}
 
 # MAIN sub {{{
