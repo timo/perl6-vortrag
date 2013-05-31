@@ -56,8 +56,9 @@ sub epsay(**@d) is export {
         }
     };
     my $code = %files{$f} //= $f.IO.lines;
-    my $codeline = colored($code[$l - 1].trim-leading.subst(/^epsay /, ""), "blue");
-    say colored($l ~ ":", "cyan") ~ " $codeline";
+    my $codeline = $code[$l - 1].trim-leading.subst(/^epsay /, "");
+    $codeline ~~ m/$<code>=[<-[\#]>+]$<comment>=[.*]/;
+    say colored($l ~ ":", "cyan") ~ " " ~ colored($<code>.Str, "blue") ~ colored($<comment>.Str, "cyan");
     psay(|@d);
 }
 sub psay(**@d) is export {
