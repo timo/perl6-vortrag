@@ -1,5 +1,6 @@
 " vim code for setup "  q{ " {{{
 :set ft=perl6
+:colorscheme wombat
 :set ls=0 " no powerline, we don't have enough space.
 :chdir ~/work/gpn13/perl6/
 :map <leader>x [zV]z:w! foobar.p6<CR>
@@ -37,6 +38,7 @@
             \ tmux -L REPL send-keys "C-d" "C-d" "C-d"<CR><CR>
 :map <PageDown> zczjzoj
 :map <PageUp> zczkzkzjzoj
+:map ,dup [zV]zy]zpkzcj<C-a>
 :silent :!i3 border 1pixel; i3 split v
 :silent :!./counter_start.sh
 :silent :!sleep 0.25
@@ -54,7 +56,7 @@
 :silent :!tmux -L REPL send-keys 'yes " " | head -n 1000' 'Enter'
 :silent :!tmux -L REPL set-option -g status off
 :set foldmethod=marker
-:set guifont=Monaco\ 14
+:set guifont=Monaco\ 11
 :silent :!i3 focus left
 :redraw!
 :finish
@@ -82,53 +84,102 @@ say Timo.WHY;
     In perl6 wurde eine neue Regex syntax eingeführt.
     Diese ist
 
-=item Lesbarer
-=item Mächtiger
-=item Übersichtlicher
+=item1 Lesbarer
+=item1 Mächtiger
+=item1 Übersichtlicher
 
 =for Perl5People
     Man kann jederzeit mit :P5 oder :Perl5 PCRE
     stattdessen schreiben.
 
-=for Clarity
-    Warum man das aber eigentlich garnicht mehr will
-    sehen wir später vielleicht noch.
+podpresent;
 
-for $=pod {
-    when Pod::Item { print " - " }
-    default { print "\n" }
-    KEEP {
-        print .content>>.content;
-        p;
-    }
+# }}}
+# Gulasch-Regex 1 {{{
+say "Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
+        <produkt=ident> \: <ws>
+        $<pre>=[<digit>+] \, $<post>=[<digit> ** 2]
+        <ws> Euro/;
+# }}}
+# Gulasch-Regex 2 {{{
+say "weniger unnütze matching groups";
+say "Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
+        <produkt=.ident> \: <.ws>
+        $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
+        <.ws> Euro/;
+# }}}
+# Gulasch-Regex 3 {{{
+psay "Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
+        << <produkt=.ident> \: <.ws>
+        $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
+        <.ws> Euro/;
+
+say("Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~
+#     vvv
+    rx:P5/\b([a-zA-Z]+): +([0-9]+),([0-9]{2}) +Euro/);
+# }}}
+# Gulasch-Regex 4 {{{
+"Heute: Gulasch: 3,50 Ruble UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
+        << <produkt=.ident> \: <.ws>
+        $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
+        <.ws> $<währung>=["Euro"|"Dollar"|"Ruble"]/;
+
+epsay $<produkt>;
+epsay $<pre>;
+epsay $<post>;
+my $preis = $<pre>.Int + $<post>.Int / 100;
+say "zwölf {$<produkt>} kosten {$preis * 12} {$<währung>}";
+# }}}
+# Gulasch-Regex 5 (einschub "comb") {{{
+epsay "foo; bar. (quux) ... yoink".comb(/<ident>/).perl;
+epsay "boing boing boing".comb().perl;
+say "foo:1; bar:2. (quux:3) ... yoink:4".comb(/<ident>\:<digit>/, :match).map({"($_.gist())"});
+# }}}
+# Gulasch-Regex 6 {{{
+my $src = q:to/LISTE/;
+    Heute: 
+        Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN
+        Börek: 3,00 Euro bla bla
+        Limonade: 1,00 Euro foo bar
+    Morgen:
+        Tschunk: 3,50 Euro  mit mate und rum
+        Ameisenbär: 5,00 Euro  mit orange, minze und Erdbeere
+    LISTE
+psay $src.comb(rx/
+        <produkt=.ident> \: <.ws>
+        $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
+        <.ws> "Euro"/).perl;
+# }}}
+# Gulasch-Regex 7 {{{
+my $src = q:to/LISTE/;
+    Heute:
+        Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN
+        Börek: 3,00 Euro bla bla
+        Limonade: 1,00 Euro foo bar
+    Morgen:
+        Tschunk: 3,50 Euro  mit mate und rum
+        Ameisenbär: 5,00 Euro  mit orange, minze und Erdbeere
+    LISTE
+my @result = $src.comb(rx/
+        <produkt=.ident> \: <.ws>
+        $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
+        <.ws> "Euro"/, :match);
+for @result {
+    epsay .<produkt>.Str, .<pre>.Int, .<post>.Int;
+}
+# }}}
+
+# MAIN sub {{{
+multi sub MAIN("foo") {
+    say "foo bar baz"
 }
 
+multi sub MAIN("blubb", $foo) {
+    say "foo is $foo"
+}
 # }}}
-# Regexes 1a {{{
-psay "Foo Bar" ~~ m:P5/(...)(?:\ (...))+/;
-psay "Foo Bar" ~~ /(...)+ % " "/;
-# }}}
-# Regexes 1b {{{
-say "Auf Ergebnisse zugreifen";
-
-say "Foo Bar" ~~ m:P5/(...)(?:\ (...))+/;
-psay $0, $1;
-
-say "Foo Bar" ~~ /(...)+ % " "/;
-psay $0, $1;
-
-psay $0.WHAT, $0.elems, $0[0].WHAT;
-# }}}
-# Regexes 1c {{{
-psay "p5: ", 'Foo Bar \o/ Qux' ~~ m:P5/(...)(?:\ (...))+/;
-psay "p6: ", 'Foo Bar \o/ Qux' ~~ /(...)+ % " "/;
-psay "oops";
-# }}}
-# Regexes 2a {{{
-my $r = "Foo123" ~~ /<ident>/;
-$r = "Foo123" ~~ /<alnum> ** 4/;
-$r = "Foo123" ~~ /(<.alpha> ** 2..5)/;
-# }}}
-# Regexes 2b {{{
-say brackify("foo(bar, baz, quux(barbaz, abc))");
+# MAIN sub {{{
+say "foo";
+p;
+say "bar";
 # }}}

@@ -8,5 +8,5 @@ xprop -id $ID -f _NET_WM_STRUT_PARTIAL 32cccccccccccc -set _NET_WM_STRUT_PARTIAL
 xprop -id $ID -f _NET_WM_WINDOW_TYPE 32a -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_DOCK
 killall -SIGCONT i3
 sleep 0.5
-tmux -L CNTR send-keys 'countup-bin $COLUMNS 5' "Enter"
+tmux -L CNTR send-keys 'countup-bin $COLUMNS 20' "Enter"
 tmux -L CNTR set-option -g status off
