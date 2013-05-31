@@ -23,7 +23,7 @@
             \j
 :map <leader>l [zV]z:w! foobar.p6<CR>
             \:silent :!tmux -L REPL send-keys
-                \ "perl6 -Ilib -MDemonstrate foobar.p6 =inputdialog('flags? ')<CR>;
+                \ "perl6 -Ilib -MDemonstrate foobar.p6 =inputdialog('flags?')<CR>;
                 \ i3 focus left >& /dev/null"
                 \ "Enter"<CR>
             \ :silent :!i3 focus right<CR>
@@ -36,9 +36,10 @@
             \ xkill -id 0x$(xwininfo -root -tree \| grep "flub" \| sed -e 's/^ *0x//' -e 's/ .*$//');
             \ tmux -L CNTR send-keys "C-d" "C-d" "C-d";
             \ tmux -L REPL send-keys "C-d" "C-d" "C-d"<CR><CR>
-:map <PageDown> zczjzoj
-:map <PageUp> zczkzkzjzoj
+:map <PageDown> zczjzoj1<C-e>
+:map <PageUp> zczkzkzjzoj1<C-y>
 :map ,dup [zV]zy]zpkzcj<C-a>
+:map ,ns O# =inputdialog('titel?')<CR> {{{<ESC>o# }}}<ESC>k
 :silent :!i3 border 1pixel; i3 split v
 :silent :!./counter_start.sh
 :silent :!sleep 0.25
@@ -137,7 +138,7 @@ say "foo:1; bar:2. (quux:3) ... yoink:4".comb(/<ident>\:<digit>/, :match).map({"
 # }}}
 # Gulasch-Regex 6 {{{
 my $src = q:to/LISTE/;
-    Heute: 
+    Heute:
         Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN
         Börek: 3,00 Euro bla bla
         Limonade: 1,00 Euro foo bar
@@ -167,6 +168,56 @@ my @result = $src.comb(rx/
 for @result {
     epsay .<produkt>.Str, .<pre>.Int, .<post>.Int;
 }
+# }}}
+
+# OOP 1 {{{
+class Produkt {
+    has $.preis;
+    has $.name;
+    has $.kategorie;
+}
+
+epsay Produkt.new();
+# }}}
+# OOP 2 {{{
+class Produkt {
+    has $.preis;
+    has $.name;
+    has $.kategorie;
+}
+
+epsay Produkt.new(preis=>3.50, name=>"gulasch", kategorie=>"gestern");
+# }}}
+# OOP 3 {{{
+class Produkt {
+    has $.preis;
+    has $.name;
+    has $.kategorie;
+
+    method new(:$preis!, :$name!, :$kategorie!) {
+        return self.bless(*, :$preis, :$name, :$kategorie);
+    }
+}
+
+epsay Produkt.new();
+# }}}
+# OOP 4 {{{
+class Produkt {
+    has $.preis = die "ein preis muss angegeben werden";
+    has $.name = die "ein name muss angegeben werden";
+    has $.kategorie = die "eine kategorie muss angegeben werden";
+}
+
+epsay Produkt.new();
+# }}}
+# OOP 5 {{{
+class Produkt {
+    has $.preis = die "ein preis muss angegeben werden";
+    has $.name = die "ein name muss angegeben werden";
+    has $.kategorie = die "eine kategorie muss angegeben werden";
+}
+
+epsay Produkt.new();
 # }}}
 
 # MAIN sub {{{
