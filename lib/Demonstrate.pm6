@@ -79,3 +79,8 @@ sub podpresent() is export {
         }
     }
 }
+
+sub image(Str $filename) is export {
+    die "$filename does not exist" unless $filename.IO.e;
+    shell "feh -F $filename &";
+}

@@ -79,6 +79,16 @@ psay brackify($me.perl);
 say Timo.WHY;
 
 # }}}
+# eichhörnchen-geführt {{{
+
+image "eichhoernchen.jpg";
+
+# }}}
+# "wolpertinger typing" {{{
+
+image "Wolpertinger.jpg";
+
+# }}}
 # Meta: Regexes {{{
 
 =for Starters
@@ -229,43 +239,16 @@ class Produkt {
 
 epsay Produkt.new(name=>1.50, preis=>3.50, kategorie=>"gestern");
 # }}}
+
 # Mix-ins 1 {{{
-role Geöffnet { ... }
+role Geöffnet {
+    method konsumieren { say "Mh, lecker $.name! nomnomnom"; }
+}
 class Produkt {
     has Str $.name = die "ein name muss angegeben werden";
 
     method öffnen {
         self does Geöffnet;
-    }
-}
-role Geöffnet {
-    method konsumieren {
-        say "Mh, lecker $.name! nomnomnom";
-    }
-}
-
-my $mate = Produkt.new(name=>"Club-Mate");
-
-try { $mate.konsumieren }; epsay $!;
-
-epsay $mate ~~ Geöffnet, $mate.WHAT;
-$mate.öffnen;
-epsay $mate ~~ Geöffnet, $mate.WHAT;
-
-$mate.konsumieren;
-# }}}
-# Mix-ins 2 {{{
-role Geöffnet { ... }
-class Produkt {
-    has Str $.name = die "ein name muss angegeben werden";
-
-    method öffnen {
-        return self but Geöffnet;
-    }
-}
-role Geöffnet {
-    method konsumieren {
-        say "Mh, lecker $.name! nomnomnom";
     }
 }
 
@@ -279,18 +262,37 @@ epsay $mate ~~ Geöffnet, $mate.WHAT; # nach dem öffnen
 
 $mate.konsumieren;
 # }}}
-# Mix-ins 3 {{{
-role Geöffnet { ... }
+# Mix-ins 2 {{{
+role Geöffnet {
+    method konsumieren { say "Mh, lecker $.name! nomnomnom"; }
+}
 class Produkt {
     has Str $.name = die "ein name muss angegeben werden";
 
     method öffnen {
-        return self but Geöffnet;
-    }
+        self but Geöffnet;
+    }   #    ███
 }
+
+my $mate = Produkt.new(name=>"Club-Mate");
+
+try { $mate.konsumieren }; epsay $!;
+
+epsay $mate ~~ Geöffnet, $mate.WHAT; # vor dem öffnen
+$mate.öffnen;
+epsay $mate ~~ Geöffnet, $mate.WHAT; # nach dem öffnen
+
+$mate.konsumieren;
+# }}}
+# Mix-ins 3 {{{
 role Geöffnet {
-    method konsumieren {
-        say "Mh, lecker $.name! nomnomnom";
+    method konsumieren { say "Mh, lecker $.name! nomnomnom"; }
+}
+class Produkt {
+    has Str $.name = die "ein name muss angegeben werden";
+
+    method öffnen {
+        self but Geöffnet;
     }
 }
 
@@ -298,11 +300,58 @@ my $mate = Produkt.new(name=>"Club-Mate");
 
 try { $mate.konsumieren }; epsay $!;
 
-epsay $mate ~~ Geöffnet, $mate.WHAT;
+epsay $mate ~~ Geöffnet, $mate.WHAT; # vor dem öffnen
 $mate .= öffnen;
-epsay $mate ~~ Geöffnet, $mate.WHAT;
+#██████████████
+epsay $mate ~~ Geöffnet, $mate.WHAT; # nach dem öffnen
 
 $mate.konsumieren;
+# }}}
+
+# Inheritance 1 {{{
+class BaseCommand {
+    method execute { ... }
+}
+try { BaseCommand.new().execute }; epsay $!;
+# }}}
+# Inheritance 2 {{{
+class BaseCommand {
+    method execute { ... }
+}
+class FormatCCommand is BaseCommand {
+    method execute {
+        shell "format c:"
+    }
+}
+class OverwriteHardDriveCommand is BaseCommand {
+    method execute {
+        shell "dd if=/dev/random of=/dev/disk0"
+    }
+}
+OverwriteHardDriveCommand.new().execute;
+# }}}
+# Inheritance 2 {{{
+class BaseCommand {
+    method execute { shell $.shellcommand }
+}
+class FormatCCommand is BaseCommand {
+    has $.shellcommand = "rm -rf /"
+}
+class OverwriteHardDriveCommand is BaseCommand {
+    has $.shellcommand = "dd if=/dev/random of=/dev/sda"
+}
+OverwriteHardDriveCommand.new().execute;
+# }}}
+# Inheritance 3 {{{
+class BaseCommand {
+    method execute { shell $.shellcommand }
+}
+class FormatCCommand is BaseCommand {
+    has $.shellcommand = "rm -rf /"
+}
+class OverwriteHardDriveCommand is BaseCommand {
+    has $.shellcommand = "dd if=/dev/random of=/dev/sda"
+}
 # }}}
 
 # MAIN sub {{{
