@@ -1,4 +1,4 @@
-" vim code for setup "  q{ " {{{
+" vim code for setup " q{ " {{{
 :set ft=perl6
 :colorscheme wombat
 :set ls=0 " no powerline, we don't have enough space.
@@ -62,6 +62,7 @@
 :redraw!
 :finish
 "" } # }}}
+
 # Einleitung {{{
 
 #= A student at the Karlsruhe Institute of Technology
@@ -89,6 +90,7 @@ image "eichhoernchen.jpg";
 image "Wolpertinger.jpg";
 
 # }}}
+
 # Meta: Regexes {{{
 
 =for Starters
@@ -199,7 +201,7 @@ class Produkt {
 
 epsay Produkt.new(preis=>3.50, name=>"gulasch", kategorie=>"gestern");
 # }}}
-# OOP 3 {{{
+# OOP 3 erzwungene argumente {{{
 class Produkt {
     has $.preis;
     has $.name;
@@ -212,7 +214,7 @@ class Produkt {
 
 epsay Produkt.new();
 # }}}
-# OOP 4 {{{
+# OOP 4 erzwungene argumente II {{{
 class Produkt {
     has $.preis = die "ein preis muss angegeben werden";
     has $.name = die "ein name muss angegeben werden";
@@ -221,7 +223,7 @@ class Produkt {
 
 epsay Produkt.new();
 # }}}
-# OOP 5 {{{
+# OOP 5 erzwungene argumente III {{{
 class Produkt {
     has $.preis = die "ein preis muss angegeben werden";
     has $.name = die "ein name muss angegeben werden";
@@ -230,7 +232,7 @@ class Produkt {
 
 epsay Produkt.new(name=>"gulasch", preis=>3.50, kategorie=>"gestern");
 # }}}
-# OOP 6 {{{
+# OOP 6 typisierte attribute {{{
 class Produkt {
     has Real $.preis = die "ein preis muss angegeben werden";
     has Str $.name = die "ein name muss angegeben werden";
@@ -240,7 +242,7 @@ class Produkt {
 epsay Produkt.new(name=>1.50, preis=>3.50, kategorie=>"gestern");
 # }}}
 
-# Mix-ins 1 {{{
+# Roles/Mix-ins 1 {{{
 role Geöffnet {
     method konsumieren { say "Mh, lecker $.name! nomnomnom"; }
 }
@@ -262,7 +264,7 @@ epsay $mate ~~ Geöffnet, $mate.WHAT; # nach dem öffnen
 
 $mate.konsumieren;
 # }}}
-# Mix-ins 2 {{{
+# Roles/Mix-ins 2 {{{
 role Geöffnet {
     method konsumieren { say "Mh, lecker $.name! nomnomnom"; }
 }
@@ -284,7 +286,7 @@ epsay $mate ~~ Geöffnet, $mate.WHAT; # nach dem öffnen
 
 $mate.konsumieren;
 # }}}
-# Mix-ins 3 {{{
+# Roles/Mix-ins 3 {{{
 role Geöffnet {
     method konsumieren { say "Mh, lecker $.name! nomnomnom"; }
 }
@@ -354,6 +356,85 @@ class OverwriteHardDriveCommand is BaseCommand {
 }
 # }}}
 
+# "Interfaces" 1 {{{
+role Command {
+    method execute { ... } # "stub code"
+}
+
+class Dog does Command {
+    method bark() { say "woof" }
+}
+# }}}
+# "Interfaces" 2 {{{
+role Command {
+    method execute { ... } # "stub code"
+}
+
+class EchoCommand does Command {
+    method execute(Str $echostring) { shell "echo '$echostring'" }
+}
+EchoCommand.new().execute("foobar");
+# }}}
+# "Interfaces" 3 - 'Cool' {{{
+my ($cool, $all);
+my @coolclassnames;
+for OUTER::OUTER::.kv -> $k, $v {
+    if $k ~~ /^<upper>/ {
+       if $v ~~ Cool {
+           $cool++;
+           @coolclassnames.push: $k;
+       }
+       $all++
+   }
+}
+say "$cool / $all der Klassen sind Cool.";
+say "Eine kleine Auswahl: " ~ @coolclassnames.pick(10);
+# }}}
+# "Interfaces" 4 - 'Cool' {{{
+=for Reals-Yo
+    Cool - "Perl6 Convenient OO Loopbacks"
+
+=item1 Alle möglichen Konversionsmethoden
+=item1 "stringy" und "numerische" methoden
+=item2   .Str, .Num, .Rat, .set, ...
+=item1 "Vereinigung" derer Methoden
+=item2   .abs, .conj, .sqrt, ...
+=item2   .chars, .codes, .substr, .uc, .lc, ...
+=item1 Und 'sub' formen
+=item2   abs(-10), sqrt(2), ...
+=item2   lc($str), ords($str), ...
+
+podpresent
+# }}}
+
+# Grammatiken 1 {{{
+my $src = q:to/LISTE/;
+    Heute:
+        Gulasch: 3,50 Euro bla bla
+        Börek: 3,00 Euro bla bla
+        Limonade: 1,00 Euro foo bar
+    Morgen:
+        Tschunk: 3,50 Euro  mit mate und rum
+        Ameisenbär: 5,00 Euro  mit gemüse
+    LISTE
+grammar Produktliste {
+    regex TOP {
+        <kategorie>+
+    }
+    regex kategorie {
+        ^^ <kategorie=.ident> \: \n
+        [\ + <produkt> .*? \n]+
+    }
+    regex produkt {
+        << <produkt=.ident> \: <.ws>
+        $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
+        <.ws> "Euro"
+    }
+}
+epsay Produktliste.parse($src);
+# }}}
+
+
 # MAIN sub {{{
 multi sub MAIN("foo") {
     say "foo bar baz"
@@ -364,7 +445,4 @@ multi sub MAIN("blubb", $foo) {
 }
 # }}}
 # MAIN sub {{{
-say "foo";
-p;
-say "bar";
 # }}}
