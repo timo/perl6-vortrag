@@ -44,7 +44,6 @@
 :silent :!./counter_start.sh
 :silent :!sleep 0.25
 :silent :!i3 border 1pixel
-:silent :!i3 resize shrink height 1 px or 50 ppt
 :silent :!i3 focus up; i3 split h
 ":silent :!gnome-terminal --hide-menubar -t "Perl Output" -x tmux -L REPL &
 :silent :!bterm  -e tmux -L REPL &
@@ -124,13 +123,13 @@ say "Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
 # }}}
 # Gulasch-Regex 3 {{{
 psay "Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
-        << <produkt=.ident> \: <.ws>
+        « <produkt=.ident> \: <.ws>
         $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
         <.ws> Euro/;
 
 say("Heute: Gulasch: 3,50 Euro UNGLAUBLICHES SCHNÄPPCHEN" ~~
 #     vvv
-    rx:P5/\b([a-zA-Z]+): +([0-9]+),([0-9]{2}) +Euro/);
+    rx:P5/\b(\w+): +([0-9]+),([0-9]{2}) +Euro/);
 # }}}
 # Gulasch-Regex 4 {{{
 "Heute: Gulasch: 3,50 Ruble UNGLAUBLICHES SCHNÄPPCHEN" ~~ rx/
@@ -144,7 +143,7 @@ epsay $<post>;
 my $preis = $<pre>.Int + $<post>.Int / 100;
 say "zwölf {$<produkt>} kosten {$preis * 12} {$<währung>}";
 # }}}
-# Gulasch-Regex 5 (einschub "comb") {{{
+ Gulasch-Regex 5 (einschub "comb") {{{
 epsay "foo; bar. (quux) ... yoink".comb(/<ident>/).perl;
 epsay "boing boing boing".comb().perl;
 say "foo:1; bar:2. (quux:3) ... yoink:4".comb(/<ident>\:<digit>/, :match).map({"($_.gist())"});
@@ -239,7 +238,7 @@ class Produkt {
     has Str $.kategorie = die "eine kategorie muss angegeben werden";
 }
 
-epsay Produkt.new(name=>1.50, preis=>3.50, kategorie=>"gestern");
+epsay Produkt.new(name=>"hallo", preis=>3.50, kategorie=>"gestern");
 # }}}
 
 # Roles/Mix-ins 1 {{{
@@ -357,13 +356,15 @@ class OverwriteHardDriveCommand is BaseCommand {
 # }}}
 
 # "Interfaces" 1 {{{
-role Command {
+say "blaber";
+role Pbzznaq {
     method execute { ... } # "stub code"
 }
 
-class Dog does Command {
+class Dog does Pbzznaq {
     method bark() { say "woof" }
 }
+
 # }}}
 # "Interfaces" 2 {{{
 role Command {
@@ -422,20 +423,127 @@ grammar Produktliste {
         <kategorie>+
     }
     regex kategorie {
-        ^^ <kategorie=.ident> \: \n
+        ^^ <kat-name=.ident> \: \n
         [\ + <produkt> .*? \n]+
     }
     regex produkt {
-        << <produkt=.ident> \: <.ws>
+        << <name=.ident> \: <.ws>
         $<pre>=[<.digit>+] \, $<post>=[<.digit> ** 2]
         <.ws> "Euro"
     }
 }
 epsay Produktliste.parse($src);
 # }}}
+# Grammatiken 2 {{{
+use produktgrammatik;
+my $src = slurp("gulaschliste.txt");
 
+my $result = Produktliste.parse($src);
+epsay $result<kategorie>[0]<kat-name>;
+epsay $result<kategorie>[0]<produkt>[0]<name>;
+epsay $result<kategorie>[0]<produkt>[1]<name>;
+# }}}
+# Grammatiken - einschub 1 {{{
+grammar Frob {
+    regex TOP {
+        ^ [<tuple> <.ws>]+ $
+    }
+    regex tuple {
+        <der-name=.ident> \: $<die-zahl>=[<digit>+]
+    }
+}
+epsay Frob.parse("Foo:10    Bar:99   Yoink:5")
+# }}}
+# Grammatiken - einschub 2 {{{
+grammar Frob {
+    regex TOP {
+        ^ [<tuple> <.ws>]+ $
+    }
+    regex tuple {
+        <der-name=.ident> \: $<die-zahl>=[<.digit>+]
+        { make ($<der-name>.Str, $<die-zahl>.Int) }
+    }
+}
+epsay brackify(Frob.parse("Foo:10    Bar:99   Yoink:5").perl)
+# }}}
+# Grammatiken - einschub 3 {{{
+grammar Frob {
+    regex TOP {
+        ^ [<tuple> <.ws>]+ $
+        {
+            make $<tuple>>>.ast;
+        }
+    }
+    regex tuple {
+        <der-name=.ident> \: $<die-zahl>=[<.digit>+]
+        { make ($<der-name>.Str, $<die-zahl>.Int) }
+    }
+}
+epsay brackify(Frob.parse("Foo:10    Bar:99   Yoink:5").ast.perl)
+# }}}
+# Grammatiken 3 {{{
+use produktgrammatik;
+my $src = slurp("gulaschliste.txt");
 
-# MAIN sub {{{
+class ProduktActions {
+    has $.kategorie;
+
+    method TOP($/) { make $<kategorie>>>.ast }
+
+    method kategorie($/) {
+        my @result = $<produkt>>>.ast;
+        for @result { $_<kategorie> = $<kat-name>.Str };
+        make @result;
+    }
+
+    method produkt($/) {
+        make {
+            name=>$<name>.Str,
+            preis=>$<pre>.Int + $<post>.Int * 0.01
+        }
+    }
+}
+
+my $result = Produktliste.parse($src, actions=>ProduktActions.new);
+for $result.ast.list {
+    .perl.say;
+}
+# }}}
+# Grammatiken 4 {{{
+use produktgrammatik;
+my $src = slurp("gulaschliste.txt");
+
+class Produkt is rw { has Real $.preis; has Str $.name; has Str $.kategorie; }
+class ProduktActions {
+    has $.kategorie;
+
+    method TOP($/) { make $<kategorie>>>.ast }
+
+    method kategorie($/) {
+        my @result = $<produkt>>>.ast;
+        for @result { $_.kategorie = $<kat-name>.Str };
+        make @result;
+    }
+
+    method produkt($/) {
+        make Produkt.new(
+            name=>$<name>.Str,
+            preis=>$<pre>.Int + $<post>.Int * 0.01
+        )
+    }
+}
+
+my $result = Produktliste.parse($src, actions=>ProduktActions.new);
+for $result.ast.list {
+    .perl.say;
+}
+# }}}
+
+# Eichhörnchen! {{{
+image "eichhoernchen.jpg"
+# }}}
+
+# MAIN sub 1 {{{
 multi sub MAIN("foo") {
     say "foo bar baz"
 }
@@ -444,5 +552,157 @@ multi sub MAIN("blubb", $foo) {
     say "foo is $foo"
 }
 # }}}
-# MAIN sub {{{
+# MAIN sub 2 {{{
+multi sub MAIN(Str $foo, Int $bar) {
+    say "$foo, $bar, str, int"
+}
+
+multi sub MAIN(Int $foo, Int $bar) {
+    say "$foo, $bar, int int"
+}
 # }}}
+# MAIN sub 3 {{{
+sub fibonacci($n) {
+    return (1, 1, * + * ... *)[$n];
+}
+
+multi sub MAIN(Int $foo) {
+    say "fibonacci von $foo ist ", fibonacci $foo
+}
+multi sub MAIN("test") {
+    use Test;
+    plan 4;
+    is fibonacci(0), 1, "erste zahl";
+    is fibonacci(1), 1, "zweite zahl";
+    is fibonacci(2), 2, "dritte zahl";
+    is fibonacci(-1), Nil, "negativer index";
+}
+# }}}
+
+# Series Operator 1 {{{
+epsay 1, 2 ... 10;    # einfache sequenz
+epsay 1, 2, 4 ... 16; # 2 ** n
+epsay 10, 9 ... 0;    # negative steps
+# }}}
+# Series Operator 2 {{{
+epsay 1, 2, 4 ...^ * > 10;
+for ^10 {
+    say 1, 2, 4 ... { [False, False, False, False, True].pick };
+}
+# }}}
+# Series Operator 3 {{{
+epsay 10, 11 ... -> $a { (state $primes)++ if $a.is-prime; $primes > 5 }
+# }}}
+# Series Operator 4 {{{
+use graphdata;
+my %parents = parents;
+my $start = "D2";
+my $end = "B4";
+epsay %parents;
+epsay %parents{$end};
+epsay %parents{%parents{$end}};
+epsay %parents{%parents{%parents{$end}}};
+# Series Operator 5 {{{
+use graphdata;
+my %parents = parents;
+my $start = "D2";
+my $end = "B4";
+epsay ($end, -> $node { %parents{$node} } ... $start);
+# }}}
+# Series Operator 6 {{{
+epsay 1, 1, *+* ... * > 100;
+# }}}
+# Series Operator 7 {{{
+
+sub hailstone($start) {
+    $start, -> $num { $num %% 2 ?? $num / 2 !! $num * 3 + 1 } ... 1;
+}
+epsay hailstone(51);
+epsay hailstone(52);
+# }}}
+
+# multi 1 {{{
+multi faktorial($foo where * <= 0) { 1 }
+multi faktorial($foo) { faktorial($foo - 1) * $foo }
+
+epsay faktorial(-5);
+epsay faktorial(0);
+epsay faktorial(1);
+epsay faktorial(2);
+epsay faktorial(10);
+# }}}
+# multi 2 {{{
+proto faktorial($foo) { * }
+multi faktorial($foo where * <= 0) { 1 }
+multi faktorial($foo) { faktorial($foo - 1) * $foo }
+
+epsay faktorial(1);
+epsay faktorial(2);
+epsay faktorial(10);
+# }}}
+# multi 3 {{{
+proto faktorial($foo) is cached { * }
+multi faktorial($foo where * <= 0) { 1 }
+multi faktorial($foo) { faktorial($foo - 1) * $foo }
+
+epsay faktorial(1);
+epsay faktorial(2);
+epsay faktorial(10);
+# }}}
+
+# sortimo 1 {{{
+my @names = <ich du er sie es wir ihr sie_2>;
+my %singular = bag <ich du er sie es>;
+
+epsay @names.sort;
+epsay @names.sort({ $_.flip });
+epsay @names.sort({ %singular{$_}:exists, $_ });
+# }}}
+# sortimo 2 {{{
+my @names = <ich du er sie es wir ihr sie_2>;
+my %singular = bag <ich du er sie es>;
+
+epsay @names.sort;
+epsay @names.sort({ $_.flip });
+epsay @names.sort({ %singular{$_}:exists, $_ });
+# }}}
+# sortimo 3 {{{
+epsay (1 ... 10).sort({ $_.is-prime, $_ });
+epsay (1 ... 10).classify({ $_.is-prime ?? "prim" !! "nichtprim" });
+# }}}
+
+
+
+# felher 1 {{{
+sub diese-sub-ist-toll() { say "yay" }
+
+diese_sub_ist_toll();
+# }}}
+# felher 2 {{{
+say String ~~ Cool;
+# }}}
+# felher 3 {{{
+if 10 < 5 { say "wat" } else if { say "yay" }
+# }}}
+# felher 4 {{{
+sub do-it(Str $foo) {
+    say $foo;
+}
+say "es ist ausgeführt";
+do-it(prompt("hallo"));
+do-it(100);
+
+# }}}
+
+# {{{
+
+sub teste-den-scheiß() {
+    LEAVE say "eins";
+    LEAVE say "zwei";
+    LEAVE say "drei";
+    ENTER say "PSYCHE!";
+}
+teste-den-scheiß;
+
+# }}}
+
