@@ -1,0 +1,4 @@
+#!/bin/sh
+urxvt -fn "xft:Monaco:pixelsize=16:autohint=true,9x15bold" $@
+#urxvt -fn "xft:Monaco:pixelsize=16,9x15bold" $@
+# ｢
