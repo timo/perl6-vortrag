@@ -1,0 +1,40 @@
+#!/usr/bin/env perl6
+
+use Term::ANSIColor;
+
+sub MAIN($W, $minutes) {
+    my $whole-time = $minutes * 60;
+
+    my @parts = ((eval('"\c[LOWER ' ~ $_ ~ ' BLOCK]"')) for ("ONE EIGHTH", "ONE QUARTER", "THREE EIGHTHS", "HALF", "FIVE EIGHTHS", "THREE QUARTERS", "SEVEN EIGHTHS")), "\c[FULL BLOCK]";
+    say @parts.elems;
+
+    prompt("ready to count up $minutes minutes");
+    shell "clear";
+    print "\o033[?25l";
+
+    my $start-time = now;
+    my $bps = $W / $whole-time;
+
+    for 0, 0.25 ... $whole-time -> \S {
+        sleep 0 max (S - (now - $start-time));
+        my $fullblock = (S * $bps);
+        for ^2 -> $inv {
+            print "\c[FULL BLOCK]" x $fullblock;
+            if $fullblock.Int % 2 == $inv {
+                print @parts[floor((S * $bps * 8) % 8)];
+            } else {
+                print INVERSE() ~ @parts[7 - floor((S * $bps * 8) % 8)] ~ INVERSE_OFF;
+            }
+            print "\o033[1E";
+        }
+        print "\o033[2F";
+    }
+    for ^10 {
+        print "\r", "\c[FULL BLOCK]" x $W;
+        sleep 0.5;
+        print "\r", " " x $W;
+        sleep 0.5;
+    }
+    print "\o033[?25h";
+    shell "clear";
+}
